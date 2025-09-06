@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>calculation Math Quiz</title>
+<style>
+body { font-family: Arial, sans-serif; background:#121212; color:#f4f4f4; display:flex; justify-content:center; align-items:flex-start; padding-top:2rem; }
+.container { width:600px; }
+.register, .quiz { background:#1e1e1e; padding:2rem; border-radius:12px; margin-bottom:1rem; box-shadow:0 0 10px #000; }
+input, select, button { margin:.5rem 0; padding:.5rem; border-radius:8px; font-size:1rem; width:100%; border:none; }
+#options button { display:block; width:100%; margin:.4rem 0; padding:.6rem; background:#333; color:#f4f4f4; cursor:pointer; border-radius:6px; }
+#options button:hover {background:#444;}
+.correct {background:#2e7d32 !important;}
+.wrong {background:#c62828 !important;}
+#trick { margin-top:0.5rem; font-size:0.9rem; color:#ffcc00; }
+#question { margin:1rem 0; font-weight:bold; font-size:1.1rem;}
+#score { font-weight:bold; font-size:1rem; margin-bottom:0.5rem; color:#00e676;}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- Registration -->
+<div class="register" id="registerDiv">
+<h2>User Info</h2>
+<input type="text" id="name" placeholder="Enter Name">
+<input type="number" id="age" placeholder="Enter Age">
+<button id="startQuiz">Start Quiz</button>
+<div id="regMsg" style="color:#ffcc00;"></div>
+</div>
+
+<!-- Quiz Section -->
+<div class="quiz" id="quizDiv" style="display:none;">
+<h1> Math Quiz</h1>
+<p id="userInfo"></p>
+<div id="score">Score: 0</div>
+<label for="chapter">Chapter:</label>
+<select id="chapter">
+  <option value="arithmetic">Arithmetic Operations</option>
+  <option value="numbers">Numbers & Operations</option>
+  <option value="fractions">Fractions & Decimals</option>
+  <option value="percentage">Percentage</option>
+  <option value="ratio">Ratio & Proportion</option>
+  <option value="interest">Interest & Profit</option>
+  <option value="timework">Time & Work / Distance</option>
+  <option value="multiplication">Multiplication & Powers</option>
+  <option value="division">Division & Factors</option>
+  <option value="decimals">Decimals & Rounding</option>
+  <option value="squares">Squares & Cubes</option>
+  <option value="roots">Square & Cube Roots</option>
+</select>
+<br>
+<label for="level">Level:</label>
+<select id="level">
+<option value="basic">Basic </option>
+<option value="intermediate">Intermediate </option>
+<option value="advanced">Advanced </option>
+</select>
+<div id="question">Loading...</div>
+<div id="options"></div>
+<div id="trick"></div>
+<button id="next">Next Question</button>
+</div>
+
+<script>
+// 🔹 User Info
+let score = 0;
+document.getElementById("startQuiz").onclick = function(){
+  const name = document.getElementById("name").value.trim();
+  const age = document.getElementById("age").value.trim();
+  if(!name || !age){ document.getElementById("regMsg").textContent="Please enter Name and Age"; return;}
+  document.getElementById("registerDiv").style.display="none";
+  document.getElementById("quizDiv").style.display="block";
+  document.getElementById("userInfo").textContent=`User: ${name}, Age: ${age}`;
+  loadQuestion();
+}
+
+// 🔹 Tricks/formula per chapter
+const tricks = {
+  arithmetic:"Use vertical addition/subtraction; break numbers for multiplication.",
+  numbers:"Check number properties: even, odd, prime, divisibility rules.",
+  fractions:"Make same denominator before adding/subtracting; multiply numerators/denominators for multiplication.",
+  percentage:"Percentage = (Part/Whole)*100; shortcut: 10%=divide by 10, 5%=half of 10%.",
+  ratio:"Maintain ratio while scaling quantities.",
+  interest:"SI = P*R*T/100; CI = P*(1+R/100)^T.",
+  timework:"Time*Work = constant; Distance = Speed*Time; use unitary method for shortcuts.",
+  multiplication:"Break large numbers; use squares, doubling and halving for faster multiplication.",
+  division:"Choose numerator divisible by denominator; use integer division.",
+  decimals:"Align decimal points; multiply/divide as integers and adjust decimal places.",
+  squares:"Use (a+b)^2, (a-b)^2 shortcuts; memorize squares of 1-30.",
+  roots:"Estimate by nearest perfect square/cube; use approximation for decimals."
+};
+
+// 🔹 Generate random number based on level
+function generateRandom(level,max){
+  if(level==="basic") return Math.floor(Math.random()*20)+1;
+  if(level==="intermediate") return Math.floor(Math.random()*100)+1;
+  return parseFloat((Math.random()*max).toFixed(2));
+}
+
+// 🔹 Generate question per chapter & level
+function generateQuestion(chapter,level){
+  let q="", answer=0, options=[], trick="", num1,num2,num3,den;
+  trick = tricks[chapter];
+
+  if(chapter==="arithmetic" || chapter==="numbers"){
+    num1 = generateRandom(level,500);
+    num2 = generateRandom(level,500);
+    const ops = ['+','-','*','/'];
+    let op = ops[Math.floor(Math.random()*ops.length)];
+    if(op==='/' && num2==0) num2=1;
+    if(op==='/' ) { num1 = num2 * generateRandom(level,10); } // perfect division
+    q = `${num1} ${op} ${num2} = ?`;
+    switch(op){
+      case '+': answer = parseFloat(num1)+parseFloat(num2); break;
+      case '-': answer = parseFloat(num1)-parseFloat(num2); break;
+      case '*': answer = parseFloat(num1)*parseFloat(num2); break;
+      case '/': answer = num1/num2; break;
+    }
+  } 
+  else if(chapter==="fractions"){
+    num1 = generateRandom(level,20); num2 = generateRandom(level,20);
+    den = generateRandom(level,10); if(den==0) den=1;
+    q = `${num1}/${den} + ${num2}/${den} = ?`;
+    answer = (parseFloat(num1)/den + parseFloat(num2)/den).toFixed(2);
+  } 
+  else if(chapter==="percentage"){
+    num1 = generateRandom(level,200); num2 = generateRandom(level,100);
+    q = `${num2}% of ${num1} = ?`;
+    answer = ((num1*num2)/100).toFixed(2);
+  } 
+  else if(chapter==="ratio"){
+    num1 = generateRandom(level,50); num2 = generateRandom(level,50); num3 = generateRandom(level,50);
+    q = `If ${num1}:${num2} = ? : ${num3}, find ?`;
+    answer = ((num2*num3)/num1).toFixed(2);
+  } 
+  else if(chapter==="interest"){
+    let P = generateRandom(level,10000); let R = generateRandom(level,20); let T = generateRandom(level,5);
+    q = `Simple Interest: P=${P}, R=${R}%, T=${T} yrs. SI=?`;
+    answer = ((P*R*T)/100).toFixed(2);
+  } 
+  else if(chapter==="timework"){
+    let W = generateRandom(level,100); let T = generateRandom(level,20);
+    q = `If work ${W} units done in ${T} hours, 1 unit takes ?`;
+    answer = (T/W).toFixed(2);
+  } 
+  else if(chapter==="multiplication"){
+    num1 = generateRandom(level,50); num2 = generateRandom(level,50);
+    q = `${num1} × ${num2} = ?`;
+    answer = num1*num2;
+  }
+  else if(chapter==="division"){
+    num2 = generateRandom(level,20); if(num2==0) num2=1;
+    num1 = num2 * generateRandom(level,10); // perfect division
+    q = `${num1} ÷ ${num2} = ?`;
+    answer = num1/num2;
+  }
+  else if(chapter==="decimals"){
+    num1 = generateRandom(level,50); num2 = generateRandom(level,50);
+    q = `${num1.toFixed(2)} + ${num2.toFixed(2)} = ?`;
+    answer = (num1+num2).toFixed(2);
+  }
+  else if(chapter==="squares"){
+    num1 = generateRandom(level,30);
+    q = `${num1}² = ?`;
+    answer = (num1*num1).toFixed(2);
+  }
+  else if(chapter==="roots"){
+    num1 = generateRandom(level,100);
+    q = `√${num1} = ? (2 decimal)`;
+    answer = Math.sqrt(num1).toFixed(2);
+  }
+
+  let correctIndex = Math.floor(Math.random()*4);
+  for(let i=0;i<4;i++){
+    if(i===correctIndex) options.push(answer);
+    else{
+      let delta = (Math.random()*10+1).toFixed(2);
+      let fake = (Math.random()<0.5 ? parseFloat(answer)+parseFloat(delta) : parseFloat(answer)-parseFloat(delta)).toFixed(2);
+      options.push(fake);
+    }
+  }
+
+  return {q,options,a:correctIndex,trick};
+}
+
+let current;
+function loadQuestion(){
+  const chapter = document.getElementById("chapter").value;
+  const level = document.getElementById("level").value;
+
+  document.getElementById("question").textContent = "Loading...";
+  document.getElementById("options").innerHTML = "";
+  document.getElementById("trick").textContent = "";
+
+  current = generateQuestion(chapter,level);
+
+  document.getElementById("question").textContent = current.q;
+  document.getElementById("trick").textContent = "Trick / Formula: " + current.trick;
+
+  const optBox = document.getElementById("options");
+  current.options.forEach((opt,i)=>{
+    const btn = document.createElement("button");
+    btn.textContent = opt;
+    btn.onclick = ()=>checkAnswer(i,btn);
+    optBox.appendChild(btn);
+  });
+}
+
+function checkAnswer(idx,btn){
+  const all = document.querySelectorAll("#options button");
+  all.forEach(b=>b.disabled=true);
+  if(idx===current.a){
+    btn.classList.add("correct");
+    score +=2;
+    speak(`Correct answer is ${current.options[current.a]}`);
+  } else {
+    btn.classList.add("wrong");
+    all[current.a].classList.add("correct");
+    score -=1;
+    speak(`Wrong! Correct answer is ${current.options[current.a]}`);
+  }
+  document.getElementById("score").textContent = "Score: "+score;
+}
+
+// 🔹 Voice Feedback
+function speak(msg){
+  if('speechSynthesis' in window){
+    const utter = new SpeechSynthesisUtterance(msg);
+    utter.lang = 'en-US';
+    window.speechSynthesis.speak(utter);
+  }
+}
+
+document.getElementById("next").onclick = loadQuestion;
+</script>
+</body>
+</html>
